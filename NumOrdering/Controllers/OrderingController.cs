@@ -8,6 +8,12 @@ namespace NumOrdering.Controllers
     [Route("[controller]")]
     public class OrderingController : ControllerBase
     {
+        IConfiguration _iconfiguration;
+        public OrderingController(IConfiguration iconfiguration)
+        {
+            _iconfiguration = iconfiguration;
+        }
+
         [HttpPost(Name = "GetSortedNumbers")]
         public IActionResult Get(IList<int> num)
         {
@@ -24,10 +30,12 @@ namespace NumOrdering.Controllers
                     }
                 }
             }
-            System.IO.File.WriteAllLines("C:\\Users\\dell\\source\\repos\\NumOrdering\\NumOrdering\\Downloads\\file.txt",
+
+            string filePath = _iconfiguration.GetValue<string>("EnvironmentSettings:DownloadPath");
+            System.IO.File.WriteAllLines(filePath,
             num.Select(n => n.ToString()));
 
-            FileContentResult result = new FileContentResult(System.IO.File.ReadAllBytes("C:\\Users\\dell\\source\\repos\\NumOrdering\\NumOrdering\\Downloads\\file.txt"), "application/txt")
+            FileContentResult result = new FileContentResult(System.IO.File.ReadAllBytes(filePath), "application/txt")
             {
                 FileDownloadName = "SortedNumbers.txt"
             };
