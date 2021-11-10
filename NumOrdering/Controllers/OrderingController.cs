@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using NumOrdering.Contract;
 using System.Net;
 
 namespace NumOrdering.Controllers
@@ -9,31 +10,66 @@ namespace NumOrdering.Controllers
     public class OrderingController : ControllerBase
     {
         IConfiguration _iconfiguration;
-        public OrderingController(IConfiguration iconfiguration)
+        IOrderingEngine _iorderingengine;
+        public OrderingController(IConfiguration iconfiguration, IOrderingEngine iorderingengine)
         {
             _iconfiguration = iconfiguration;
+            _iorderingengine = iorderingengine;
         }
 
-        [HttpPost(Name = "GetSortedNumbers")]
-        public IActionResult Get(IList<int> num)
+        [HttpPost]
+        [Route("GetSortedNumbersUsingBubbleSort")]
+        public IActionResult GetSortedNumbersUsingBubbleSort(IList<int> num)
         {
             int count = num.Count - 1;
-            for (int i = 0; i < count; i++)
+
+            var sortedNum = _iorderingengine.SortBubble(num, count);
+
+            string filePath = _iconfiguration.GetValue<string>("EnvironmentSettings:DownloadPath");
+            System.IO.File.WriteAllLines(filePath,
+            sortedNum.Select(n => n.ToString()));
+
+            FileContentResult result = new FileContentResult(System.IO.File.ReadAllBytes(filePath), "application/txt")
             {
-                for (int j = count; j > i; j--)
-                {
-                    if (((IComparable)num[j - 1]).CompareTo(num[j]) > 0)
-                    {
-                        int temp = num[j - 1];
-                        num[j - 1] = num[j];
-                        num[j] = temp;
-                    }
-                }
-            }
+                FileDownloadName = "SortedNumbers.txt"
+            };
+
+            return result;
+
+        }
+
+        [HttpPost]
+        [Route("GetSortedNumbersUsingInsertionSort")]
+        public IActionResult GetSortedNumbersUsingInsertionSort(IList<int> num)
+        {
+            int count = num.Count;
+
+            var sortedNum = _iorderingengine.SortInsertion(num, count);
 
             string filePath = _iconfiguration.GetValue<string>("EnvironmentSettings:DownloadPath");
             System.IO.File.WriteAllLines(filePath,
             num.Select(n => n.ToString()));
+
+            FileContentResult result = new FileContentResult(System.IO.File.ReadAllBytes(filePath), "application/txt")
+            {
+                FileDownloadName = "SortedNumbers.txt"
+            };
+
+            return result;
+
+        }
+
+        [HttpPost]
+        [Route("GetSortedNumbersUsingMergeSort")]
+        public IActionResult GetSortedNumbersUsingMergeSort(IList<int> num)
+        {
+            int count = num.Count;
+            
+            var sortedNum = _iorderingengine.SortMerge(num);
+            
+            string filePath = _iconfiguration.GetValue<string>("EnvironmentSettings:DownloadPath");
+            System.IO.File.WriteAllLines(filePath,
+            sortedNum.Select(n => n.ToString()));
 
             FileContentResult result = new FileContentResult(System.IO.File.ReadAllBytes(filePath), "application/txt")
             {
